@@ -1,0 +1,216 @@
+swagger: "2.0"
+info:
+  description: Run Google gcloud commands in Direktiv
+  title: gcloud
+  version: '1.0'
+  x-direktiv-meta:
+    container: direktiv/gcloud
+    maintainer: |-
+      [direktiv.io](https://www.direktiv.io)
+    issues: https://github.com/direktiv-apps/gcloud/issues
+    url: https://github.com/direktiv-apps/gcloud 
+    categories: 
+    - cloud
+    - aws
+    license: |-
+      [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)
+    long-description: |
+      This function executes alist of commans. It can run gcloud commands but has basic build tools installed as well, e.g. git.
+consumes:
+- application/json
+produces:
+- application/json
+schemes:
+- http
+paths:
+  /: 
+    delete:
+      parameters:
+        - name: Direktiv-ActionID
+          in: header
+          type: string
+          description: |
+            On cancel Direktiv sends a DELETE request to
+            the action with id in the header
+      x-direktiv:
+        cancel: echo 'cancel {{ .DirektivActionID }}'
+      responses:
+        200:
+    post:
+      parameters:
+        - name: Direktiv-ActionID
+          in: header
+          type: string
+          description: |
+            direktiv action id is an UUID. 
+            For development it can be set to 'development'
+        - name: Direktiv-TempDir
+          in: header
+          type: string
+          description: |
+            direktiv temp dir is the working directory for that request
+            For development it can be set to e.g. '/tmp'
+        - name: body
+          in: body
+          schema:
+            type: object
+            required:
+              - account
+              - key
+              - project
+            properties:
+              account:
+                type: string
+                description: Service account name
+                example: sa@myproject.iam.gserviceaccount.com
+              key:
+                type: string
+                description: JSON access file (IAM).
+              project:
+                type: string
+                description: Specifies the project name.
+                example: my-project-234
+              commands:
+                type: array
+                description: List of commands to run. Use `--format=json` to get JSON results.
+                example: gcloud compute instances list --format=json
+                items:
+                  type: string
+              continue:
+                type: boolean
+                description: If set to true all commands are getting executed and errors ignored.
+                default: false
+                example: true
+      # direktiv code generation is configured here
+      x-direktiv-function: |-
+        functions:
+          - id: gcloud
+            image: direktiv/gcloud:1.0
+            type: knative-workflow
+      x-direktiv-examples:
+        - title: Basic
+          content: |-
+            - id: req
+                 type: action
+                 action:
+                   function: gcloud
+                   action:
+                   function: gcloud-build
+                   secrets: ["gcloud"]
+                   input:
+                     continue: false
+                     account: serviceaccount@project.iam.gserviceaccount.com
+                     project: project
+                     key: jq(.secrets.gcloud | @base64 )
+                     commands:
+                     - gcloud compute instances list --format=json
+        - title: Running Scripts
+          content: |-
+            - id: req
+                 type: action
+                 action:
+                  function: gcloud
+                  secrets: ["gcloud"]
+                  files:
+                  - key: test.sh
+                    scope: inline
+                    mode: "0755"
+                    value: |-
+                      #!/bin/bash
+                      gcloud builds list --format=json
+                  input:
+                    account: serviceaccount@project.iam.gserviceaccount.com
+                    project: project
+                    key: jq(.secrets.gcloud | @base64 )
+                    commands:
+                    - ./test.sh
+      x-direktiv:  
+        cmds:
+        - action: exec
+          exec: bash -c 'echo {{ .Key }} | base64 -d > key.json'
+          silent: true
+          print: false
+        - action: exec
+          exec: gcloud auth activate-service-account {{ .Account }} --key-file=key.json
+          env: ["HOME={{ .DirektivDir }}"]
+        - action: foreach
+          loop: .Commands
+          exec: '{{ .Item }}'
+          env: ["HOME={{ .DirektivDir }}", "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"]
+          silent: true
+          continue: '{{ .Body.Continue }}'
+        output: |
+          {
+            "gcloud": {{ index . 2 | toJson }}
+          }
+      x-direktiv-errors:
+        io.direktiv.command.error: Command execution failed
+        io.direktiv.output.error: Template error for output generation of the service
+        io.direktiv.ri.error: Can not create information object from request
+      responses:
+        200:
+          description: Responds with a list of results 
+          examples:
+            gcloud:
+              gcloud:
+              - result:
+                - createTime: '2021-03-25T23:35:39.884256611Z'
+                  finishTime: '2021-03-25T23:37:13.835995Z'
+                  id: 123
+                  options:
+                    logging: LEGACY
+                  queueTtl: 3600s
+                  results:
+                    buildStepImages:
+                    - ''
+                    buildStepOutputs:
+                    - ''
+                  sourceProvenance: {}
+                  startTime: '2021-03-25T23:35:41.802247339Z'
+                  status: SUCCESS
+                  timing:
+                    BUILD:
+                      endTime: '2021-03-25T23:37:12.877607119Z'
+                      startTime: '2021-03-25T23:35:43.804308897Z'
+                  success: true
+          schema:
+            type: object
+            properties:
+              gcloud:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - success
+                  - result
+                  properties:
+                    success:
+                      type: boolean
+                    result:
+                      additionalProperties: {}
+        default:
+          description: generic error response
+          headers:
+            Direktiv-ErrorCode:
+              type: string
+            Direktiv-ErrorMessage:
+              type: string
+          schema:
+            $ref: "#/definitions/error"
+definitions:
+  direktivFile:
+    type: object
+    x-go-type:
+      type: DirektivFile
+      import:
+        package: github.com/direktiv/apps/go/pkg/apps 
+  error:
+    type: object
+    required:
+      - errorCode
+      - errorMessage
+    properties:
+      errorCode:
+        type: string
+      errorMessage:
+        type: string
