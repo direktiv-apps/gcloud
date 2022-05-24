@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   description: Run Google gcloud commands in Direktiv
   title: gcloud
-  version: '1.0'
+  version: "1.0"
   x-direktiv-meta:
     container: direktiv/gcloud
     maintainer: |-
