@@ -68,7 +68,6 @@ func init() {
               "type": "object",
               "required": [
                 "account",
-                "key",
                 "project"
               ],
               "properties": {
@@ -92,7 +91,7 @@ func init() {
                   "example": true
                 },
                 "key": {
-                  "description": "JSON access file (IAM).",
+                  "description": "Base64 encoded JSON access file (IAM). If not provided the function uses ` + "`" + `key.json` + "`" + `.",
                   "type": "string"
                 },
                 "project": {
@@ -109,9 +108,62 @@ func init() {
             "description": "Responds with a list of results",
             "schema": {
               "type": "object",
-              "additionalProperties": false,
-              "example": {
-                "greeting": "Hello YourName"
+              "properties": {
+                "gcloud": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "success",
+                      "result"
+                    ],
+                    "properties": {
+                      "result": {
+                        "additionalProperties": false
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "examples": {
+              "gcloud": {
+                "gcloud": [
+                  {
+                    "result": [
+                      {
+                        "createTime": "2021-03-25T23:35:39.884256611Z",
+                        "finishTime": "2021-03-25T23:37:13.835995Z",
+                        "id": 123,
+                        "options": {
+                          "logging": "LEGACY"
+                        },
+                        "queueTtl": "3600s",
+                        "results": {
+                          "buildStepImages": [
+                            ""
+                          ],
+                          "buildStepOutputs": [
+                            ""
+                          ]
+                        },
+                        "sourceProvenance": {},
+                        "startTime": "2021-03-25T23:35:41.802247339Z",
+                        "status": "SUCCESS",
+                        "success": true,
+                        "timing": {
+                          "BUILD": {
+                            "endTime": "2021-03-25T23:37:12.877607119Z",
+                            "startTime": "2021-03-25T23:35:43.804308897Z"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
             }
           },
@@ -134,14 +186,19 @@ func init() {
           "cmds": [
             {
               "action": "exec",
-              "exec": "bash -c 'echo {{ .Key }} | base64 -d \u003e key.json'"
+              "continue": false,
+              "exec": "{{- if not (empty .Key) }}\nbash -c 'echo {{ .Key }} | base64 -d \u003e key.json'\n{{- else }}\necho \"using existing key.json file\"\n{{- end }}",
+              "print": true,
+              "silent": true
             },
             {
               "action": "exec",
+              "continue": false,
               "env": [
                 "HOME={{ .DirektivDir }}"
               ],
-              "exec": "gcloud auth activate-service-account {{ .Account }} --key-file=key.json"
+              "exec": "gcloud auth activate-service-account {{ .Account }} --key-file=key.json",
+              "print": false
             },
             {
               "action": "foreach",
@@ -151,8 +208,7 @@ func init() {
                 "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"
               ],
               "exec": "{{ .Item }}",
-              "loop": ".Commands",
-              "silent": true
+              "loop": ".Commands"
             }
           ],
           "output": "{\n  \"gcloud\": {{ index . 2 | toJson }}\n}\n"
@@ -164,11 +220,11 @@ func init() {
         },
         "x-direktiv-examples": [
           {
-            "content": "- id: req\n     type: action\n     action:\n       function: gcloud",
+            "content": "- id: req\n     type: action\n     action:\n       function: gcloud\n       action:\n       function: gcloud-build\n       secrets: [\"gcloud\"]\n       input:\n         continue: false\n         account: serviceaccount@project.iam.gserviceaccount.com\n         project: project\n         key: jq(.secrets.gcloud | @base64 )\n         commands:\n         - gcloud compute instances list --format=json",
             "title": "Basic"
           },
           {
-            "content": "- id: req\n     type: action\n     action:\n       function: gcloud",
+            "content": "- id: req\n     type: action\n     action:\n      function: gcloud\n      secrets: [\"gcloud\"]\n      files:\n      - key: test.sh\n        scope: inline\n        mode: \"0755\"\n        value: |-\n          #!/bin/bash\n          gcloud builds list --format=json\n      input:\n        account: serviceaccount@project.iam.gserviceaccount.com\n        project: project\n        key: jq(.secrets.gcloud | @base64 )\n        commands:\n        - ./test.sh",
             "title": "Running Scripts"
           }
         ],
@@ -272,7 +328,6 @@ func init() {
               "type": "object",
               "required": [
                 "account",
-                "key",
                 "project"
               ],
               "properties": {
@@ -296,7 +351,7 @@ func init() {
                   "example": true
                 },
                 "key": {
-                  "description": "JSON access file (IAM).",
+                  "description": "Base64 encoded JSON access file (IAM). If not provided the function uses ` + "`" + `key.json` + "`" + `.",
                   "type": "string"
                 },
                 "project": {
@@ -313,9 +368,50 @@ func init() {
             "description": "Responds with a list of results",
             "schema": {
               "type": "object",
-              "additionalProperties": false,
-              "example": {
-                "greeting": "Hello YourName"
+              "properties": {
+                "gcloud": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/GcloudItems0"
+                  }
+                }
+              }
+            },
+            "examples": {
+              "gcloud": {
+                "gcloud": [
+                  {
+                    "result": [
+                      {
+                        "createTime": "2021-03-25T23:35:39.884256611Z",
+                        "finishTime": "2021-03-25T23:37:13.835995Z",
+                        "id": 123,
+                        "options": {
+                          "logging": "LEGACY"
+                        },
+                        "queueTtl": "3600s",
+                        "results": {
+                          "buildStepImages": [
+                            ""
+                          ],
+                          "buildStepOutputs": [
+                            ""
+                          ]
+                        },
+                        "sourceProvenance": {},
+                        "startTime": "2021-03-25T23:35:41.802247339Z",
+                        "status": "SUCCESS",
+                        "success": true,
+                        "timing": {
+                          "BUILD": {
+                            "endTime": "2021-03-25T23:37:12.877607119Z",
+                            "startTime": "2021-03-25T23:35:43.804308897Z"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
             }
           },
@@ -338,14 +434,19 @@ func init() {
           "cmds": [
             {
               "action": "exec",
-              "exec": "bash -c 'echo {{ .Key }} | base64 -d \u003e key.json'"
+              "continue": false,
+              "exec": "{{- if not (empty .Key) }}\nbash -c 'echo {{ .Key }} | base64 -d \u003e key.json'\n{{- else }}\necho \"using existing key.json file\"\n{{- end }}",
+              "print": true,
+              "silent": true
             },
             {
               "action": "exec",
+              "continue": false,
               "env": [
                 "HOME={{ .DirektivDir }}"
               ],
-              "exec": "gcloud auth activate-service-account {{ .Account }} --key-file=key.json"
+              "exec": "gcloud auth activate-service-account {{ .Account }} --key-file=key.json",
+              "print": false
             },
             {
               "action": "foreach",
@@ -355,8 +456,7 @@ func init() {
                 "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"
               ],
               "exec": "{{ .Item }}",
-              "loop": ".Commands",
-              "silent": true
+              "loop": ".Commands"
             }
           ],
           "output": "{\n  \"gcloud\": {{ index . 2 | toJson }}\n}\n"
@@ -368,11 +468,11 @@ func init() {
         },
         "x-direktiv-examples": [
           {
-            "content": "- id: req\n     type: action\n     action:\n       function: gcloud",
+            "content": "- id: req\n     type: action\n     action:\n       function: gcloud\n       action:\n       function: gcloud-build\n       secrets: [\"gcloud\"]\n       input:\n         continue: false\n         account: serviceaccount@project.iam.gserviceaccount.com\n         project: project\n         key: jq(.secrets.gcloud | @base64 )\n         commands:\n         - gcloud compute instances list --format=json",
             "title": "Basic"
           },
           {
-            "content": "- id: req\n     type: action\n     action:\n       function: gcloud",
+            "content": "- id: req\n     type: action\n     action:\n      function: gcloud\n      secrets: [\"gcloud\"]\n      files:\n      - key: test.sh\n        scope: inline\n        mode: \"0755\"\n        value: |-\n          #!/bin/bash\n          gcloud builds list --format=json\n      input:\n        account: serviceaccount@project.iam.gserviceaccount.com\n        project: project\n        key: jq(.secrets.gcloud | @base64 )\n        commands:\n        - ./test.sh",
             "title": "Running Scripts"
           }
         ],
@@ -399,6 +499,21 @@ func init() {
     }
   },
   "definitions": {
+    "GcloudItems0": {
+      "type": "object",
+      "required": [
+        "success",
+        "result"
+      ],
+      "properties": {
+        "result": {
+          "additionalProperties": false
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "direktivFile": {
       "type": "object",
       "x-go-type": {

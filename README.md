@@ -167,7 +167,7 @@ This function executes alist of commans. It can run gcloud commands but has basi
 | account | string| `string` | ✓ | | Service account name | `sa@myproject.iam.gserviceaccount.com` |
 | commands | []string| `[]string` |  | | List of commands to run. Use `--format=json` to get JSON results. | `gcloud compute instances list --format=json` |
 | continue | boolean| `bool` |  | | If set to true all commands are getting executed and errors ignored. | `true` |
-| key | string| `string` | ✓ | | JSON access file (IAM). |  |
+| key | string| `string` |  | | Base64 encoded JSON access file (IAM). If not provided the function uses `key.json`. |  |
 | project | string| `string` | ✓ | | Specifies the project name. | `my-project-234` |
 
  

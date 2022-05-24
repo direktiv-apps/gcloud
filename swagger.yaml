@@ -56,7 +56,6 @@ paths:
             type: object
             required:
               - account
-              - key
               - project
             properties:
               account:
@@ -65,7 +64,7 @@ paths:
                 example: sa@myproject.iam.gserviceaccount.com
               key:
                 type: string
-                description: JSON access file (IAM).
+                description: Base64 encoded JSON access file (IAM). If not provided the function uses `key.json`.
               project:
                 type: string
                 description: Specifies the project name.
@@ -127,17 +126,24 @@ paths:
       x-direktiv:  
         cmds:
         - action: exec
-          exec: bash -c 'echo {{ .Key }} | base64 -d > key.json'
+          exec: |-
+            {{- if not (empty .Key) }}
+            bash -c 'echo {{ .Key }} | base64 -d > key.json'
+            {{- else }}
+            echo "using existing key.json file"
+            {{- end }}
           silent: true
-          print: false
+          print: true
+          continue: false
         - action: exec
           exec: gcloud auth activate-service-account {{ .Account }} --key-file=key.json
           env: ["HOME={{ .DirektivDir }}"]
+          continue: false
+          print: false
         - action: foreach
           loop: .Commands
           exec: '{{ .Item }}'
           env: ["HOME={{ .DirektivDir }}", "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"]
-          silent: true
           continue: '{{ .Body.Continue }}'
         output: |
           {

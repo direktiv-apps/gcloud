@@ -2,12 +2,12 @@ package operations
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"sync"
 
 	"github.com/direktiv/apps/go/pkg/apps"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 
 	"gcloud/models"
 )
@@ -43,7 +43,7 @@ type accParamsTemplate struct {
 }
 
 func PostDirektivHandle(params PostParams) middleware.Responder {
-	var resp interface{}
+	resp := &PostOKBody{}
 
 	var (
 		err  error
@@ -72,7 +72,8 @@ func PostDirektivHandle(params PostParams) middleware.Responder {
 	ret, err = runCommand0(ctx, accParams, ri)
 	responses = append(responses, ret)
 
-	cont = convertTemplateToBool("<no value>", accParams, true)
+	// if foreach returns an error there is no continue
+	cont = convertTemplateToBool("false", accParams, true)
 
 	if err != nil && !cont {
 		errName := cmdErr
@@ -85,7 +86,8 @@ func PostDirektivHandle(params PostParams) middleware.Responder {
 	ret, err = runCommand1(ctx, accParams, ri)
 	responses = append(responses, ret)
 
-	cont = convertTemplateToBool("<no value>", accParams, true)
+	// if foreach returns an error there is no continue
+	cont = convertTemplateToBool("false", accParams, true)
 
 	if err != nil && !cont {
 		errName := cmdErr
@@ -98,7 +100,7 @@ func PostDirektivHandle(params PostParams) middleware.Responder {
 	ret, err = runCommand2(ctx, accParams, ri)
 	responses = append(responses, ret)
 
-	cont = convertTemplateToBool("{{ .Body.Continue }}", accParams, true)
+	// if foreach returns an error there is no continue
 
 	if err != nil && !cont {
 		errName := cmdErr
@@ -118,7 +120,10 @@ func PostDirektivHandle(params PostParams) middleware.Responder {
 
 	responseBytes := []byte(s)
 
-	err = json.Unmarshal(responseBytes, &resp)
+	// validate
+	resp.UnmarshalBinary(responseBytes)
+	err = resp.Validate(strfmt.Default)
+
 	if err != nil {
 		return generateError(outErr, err)
 	}
@@ -141,15 +146,19 @@ func runCommand0(ctx context.Context,
 		params.DirektivDir,
 	}
 
-	cmd, err := templateString(`bash -c 'echo {{ .Key }} | base64 -d > key.json'`, at)
+	cmd, err := templateString(`{{- if not (empty .Key) }}
+bash -c 'echo {{ .Key }} | base64 -d > key.json'
+{{- else }}
+echo "using existing key.json file"
+{{- end }}`, at)
 	if err != nil {
 		ir[resultKey] = err.Error()
 		return ir, err
 	}
 	cmd = strings.Replace(cmd, "\n", "", -1)
 
-	silent := convertTemplateToBool("<no value>", at, false)
-	print := convertTemplateToBool("<no value>", at, true)
+	silent := convertTemplateToBool("true", at, false)
+	print := convertTemplateToBool("true", at, true)
 	output := ""
 
 	envs := []string{}
@@ -183,7 +192,7 @@ func runCommand1(ctx context.Context,
 	cmd = strings.Replace(cmd, "\n", "", -1)
 
 	silent := convertTemplateToBool("<no value>", at, false)
-	print := convertTemplateToBool("<no value>", at, true)
+	print := convertTemplateToBool("false", at, true)
 	output := ""
 
 	envs := []string{}
@@ -227,7 +236,7 @@ func runCommand2(ctx context.Context,
 			continue
 		}
 
-		silent := convertTemplateToBool("true", ls, false)
+		silent := convertTemplateToBool("<no value>", ls, false)
 		print := convertTemplateToBool("<no value>", ls, true)
 		cont := convertTemplateToBool("{{ .Body.Continue }}", ls, false)
 		output := ""
