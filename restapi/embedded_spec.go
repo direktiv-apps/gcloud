@@ -35,7 +35,7 @@ func init() {
     "x-direktiv-meta": {
       "categories": [
         "cloud",
-        "aws"
+        "gcp"
       ],
       "container": "direktiv/gcloud",
       "issues": "https://github.com/direktiv-apps/gcloud/issues",
@@ -77,18 +77,32 @@ func init() {
                   "example": "sa@myproject.iam.gserviceaccount.com"
                 },
                 "commands": {
-                  "description": "List of commands to run. Use ` + "`" + `--format=json` + "`" + ` to get JSON results.",
+                  "description": "Array of commands.",
                   "type": "array",
                   "items": {
-                    "type": "string"
-                  },
-                  "example": "gcloud compute instances list --format=json"
-                },
-                "continue": {
-                  "description": "If set to true all commands are getting executed and errors ignored.",
-                  "type": "boolean",
-                  "default": false,
-                  "example": true
+                    "type": "object",
+                    "properties": {
+                      "command": {
+                        "description": "Command to run",
+                        "type": "string",
+                        "example": "kubectl version --client=true -o json"
+                      },
+                      "continue": {
+                        "description": "Stops excecution if command fails, otherwise proceeds with next command",
+                        "type": "boolean"
+                      },
+                      "print": {
+                        "description": "If set to false the command will not print the full command with arguments to logs.",
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "silent": {
+                        "description": "If set to false the command will not print output to logs.",
+                        "type": "boolean",
+                        "default": false
+                      }
+                    }
+                  }
                 },
                 "key": {
                   "description": "Base64 encoded JSON access file (IAM). If not provided the function uses ` + "`" + `key.json` + "`" + `.",
@@ -188,7 +202,7 @@ func init() {
               "action": "exec",
               "continue": false,
               "exec": "{{- if not (empty .Key) }}\nbash -c 'echo {{ .Key }} | base64 -d \u003e key.json'\n{{- else }}\necho \"using existing key.json file\"\n{{- end }}",
-              "print": true,
+              "print": false,
               "silent": true
             },
             {
@@ -202,13 +216,15 @@ func init() {
             },
             {
               "action": "foreach",
-              "continue": "{{ .Body.Continue }}",
+              "continue": "{{ .Item.Continue }}",
               "env": [
                 "HOME={{ .DirektivDir }}",
                 "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"
               ],
-              "exec": "{{ .Item }}",
-              "loop": ".Commands"
+              "exec": "{{ .Item.Command }}",
+              "loop": ".Commands",
+              "print": "{{ .Item.Print }}",
+              "silent": "{{ .Item.Silent }}"
             }
           ],
           "output": "{\n  \"gcloud\": {{ index . 2 | toJson }}\n}\n"
@@ -295,7 +311,7 @@ func init() {
     "x-direktiv-meta": {
       "categories": [
         "cloud",
-        "aws"
+        "gcp"
       ],
       "container": "direktiv/gcloud",
       "issues": "https://github.com/direktiv-apps/gcloud/issues",
@@ -337,18 +353,11 @@ func init() {
                   "example": "sa@myproject.iam.gserviceaccount.com"
                 },
                 "commands": {
-                  "description": "List of commands to run. Use ` + "`" + `--format=json` + "`" + ` to get JSON results.",
+                  "description": "Array of commands.",
                   "type": "array",
                   "items": {
-                    "type": "string"
-                  },
-                  "example": "gcloud compute instances list --format=json"
-                },
-                "continue": {
-                  "description": "If set to true all commands are getting executed and errors ignored.",
-                  "type": "boolean",
-                  "default": false,
-                  "example": true
+                    "$ref": "#/definitions/CommandsItems0"
+                  }
                 },
                 "key": {
                   "description": "Base64 encoded JSON access file (IAM). If not provided the function uses ` + "`" + `key.json` + "`" + `.",
@@ -436,7 +445,7 @@ func init() {
               "action": "exec",
               "continue": false,
               "exec": "{{- if not (empty .Key) }}\nbash -c 'echo {{ .Key }} | base64 -d \u003e key.json'\n{{- else }}\necho \"using existing key.json file\"\n{{- end }}",
-              "print": true,
+              "print": false,
               "silent": true
             },
             {
@@ -450,13 +459,15 @@ func init() {
             },
             {
               "action": "foreach",
-              "continue": "{{ .Body.Continue }}",
+              "continue": "{{ .Item.Continue }}",
               "env": [
                 "HOME={{ .DirektivDir }}",
                 "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"
               ],
-              "exec": "{{ .Item }}",
-              "loop": ".Commands"
+              "exec": "{{ .Item.Command }}",
+              "loop": ".Commands",
+              "print": "{{ .Item.Print }}",
+              "silent": "{{ .Item.Silent }}"
             }
           ],
           "output": "{\n  \"gcloud\": {{ index . 2 | toJson }}\n}\n"
@@ -499,6 +510,30 @@ func init() {
     }
   },
   "definitions": {
+    "CommandsItems0": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "description": "Command to run",
+          "type": "string",
+          "example": "kubectl version --client=true -o json"
+        },
+        "continue": {
+          "description": "Stops excecution if command fails, otherwise proceeds with next command",
+          "type": "boolean"
+        },
+        "print": {
+          "description": "If set to false the command will not print the full command with arguments to logs.",
+          "type": "boolean",
+          "default": true
+        },
+        "silent": {
+          "description": "If set to false the command will not print output to logs.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
     "GcloudItems0": {
       "type": "object",
       "required": [

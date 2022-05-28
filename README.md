@@ -4,7 +4,7 @@
 Run Google gcloud commands in Direktiv
 
 ---
-- #### Categories: cloud, aws
+- #### Categories: cloud, gcp
 - #### Image: direktiv/gcloud 
 - #### License: [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 - #### Issue Tracking: https://github.com/direktiv-apps/gcloud/issues
@@ -49,17 +49,15 @@ This function executes alist of commans. It can run gcloud commands but has basi
      action:
       function: gcloud
       secrets: ["gcloud"]
-      files:
-      - key: test.sh
-        scope: inline
-        mode: "0755"
-        value: |-
-          #!/bin/bash
-          gcloud builds list --format=json
       input:
         account: serviceaccount@project.iam.gserviceaccount.com
         project: project
         key: jq(.secrets.gcloud | @base64 )
+        - name: test.sh
+          mode: "0755"
+          data: |-
+            #!/bin/bash
+            gcloud builds list --format=json
         commands:
         - ./test.sh
    ```
@@ -165,9 +163,24 @@ This function executes alist of commans. It can run gcloud commands but has basi
 | Name | Type | Go type | Required | Default | Description | Example |
 |------|------|---------|:--------:| ------- |-------------|---------|
 | account | string| `string` | ✓ | | Service account name | `sa@myproject.iam.gserviceaccount.com` |
-| commands | []string| `[]string` |  | | List of commands to run. Use `--format=json` to get JSON results. | `gcloud compute instances list --format=json` |
-| continue | boolean| `bool` |  | | If set to true all commands are getting executed and errors ignored. | `true` |
+| commands | [][PostParamsBodyCommandsItems](#post-params-body-commands-items)| `[]*PostParamsBodyCommandsItems` |  | | Array of commands. |  |
 | key | string| `string` |  | | Base64 encoded JSON access file (IAM). If not provided the function uses `key.json`. |  |
 | project | string| `string` | ✓ | | Specifies the project name. | `my-project-234` |
+
+
+#### <span id="post-params-body-commands-items"></span> postParamsBodyCommandsItems
+
+  
+
+
+
+**Properties**
+
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| command | string| `string` |  | | Command to run | `gcloud compute instances list --format=json` |
+| continue | boolean| `bool` |  | | Stops excecution if command fails, otherwise proceeds with next command |  |
+| print | boolean| `bool` |  | `true`| If set to false the command will not print the full command with arguments to logs. |  |
+| silent | boolean| `bool` |  | | If set to false the command will not print output to logs. |  |
 
  

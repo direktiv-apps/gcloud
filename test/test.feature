@@ -16,7 +16,9 @@ Scenario: simple test
       "project": '#(secrets.project)',
       "key": '#(secrets.key)',
       "commands": [
-        "gcloud compute instances list --format json"
+        {
+          "command":  "gcloud compute instances list --format json"
+        }
       ]
     }
     """
@@ -46,7 +48,9 @@ Scenario: wrong account
       "project": '#(secrets.project)',
       "key": '#(secrets.key)',
       "commands": [
-        "gcloud compute instances list --format json"
+        {
+          "command": "gcloud compute instances list --format json"
+        }
       ]
     }
     """
@@ -67,10 +71,14 @@ Scenario: continue on error
       "project": '#(secrets.project)',
       "key": '#(secrets.key)',
       "commands": [
-        "gcloud nocommand test",
-        "gcloud compute instances list --format json"
+        {
+        "command": "gcloud nocommand test",
+        "continue": true
+        },
+        {
+        "command": "gcloud compute instances list --format json"
+        }
       ],
-      "continue": true
     }
     """
     When method post
@@ -88,8 +96,13 @@ Scenario: stop on error
       "project": '#(secrets.project)',
       "key": '#(secrets.key)',
       "commands": [
-        "gcloud nocommand test",
-        "gcloud compute instances list --format json"
+        {
+        "command": "gcloud nocommand test",
+        "continue": false
+        },
+        {
+        "command": "gcloud compute instances list --format json"
+        }
       ]
     }
     """
@@ -107,10 +120,14 @@ Scenario: use file json
       "account": '#(secrets.account)',
       "project": '#(secrets.project)',
       "commands": [
-        "gcloud nocommand test",
-        "gcloud compute instances list --format json"
-      ],
-      "continue": true
+        {
+        "command": "gcloud nocommand test",
+        "continue": true
+        },
+        {
+        "command": "gcloud compute instances list --format json"
+        }
+      ]
     }
     """
     When method post

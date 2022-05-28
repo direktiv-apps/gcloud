@@ -71,13 +71,8 @@ type PostBody struct {
 	// Required: true
 	Account *string `json:"account"`
 
-	// List of commands to run. Use `--format=json` to get JSON results.
-	// Example: gcloud compute instances list --format=json
-	Commands []string `json:"commands"`
-
-	// If set to true all commands are getting executed and errors ignored.
-	// Example: true
-	Continue *bool `json:"continue,omitempty"`
+	// Array of commands.
+	Commands []*PostParamsBodyCommandsItems0 `json:"commands"`
 
 	// Base64 encoded JSON access file (IAM). If not provided the function uses `key.json`.
 	Key string `json:"key,omitempty"`
@@ -93,6 +88,10 @@ func (o *PostBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := o.validateAccount(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := o.validateCommands(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -115,6 +114,32 @@ func (o *PostBody) validateAccount(formats strfmt.Registry) error {
 	return nil
 }
 
+func (o *PostBody) validateCommands(formats strfmt.Registry) error {
+	if swag.IsZero(o.Commands) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(o.Commands); i++ {
+		if swag.IsZero(o.Commands[i]) { // not required
+			continue
+		}
+
+		if o.Commands[i] != nil {
+			if err := o.Commands[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("body" + "." + "commands" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("body" + "." + "commands" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (o *PostBody) validateProject(formats strfmt.Registry) error {
 
 	if err := validate.Required("body"+"."+"project", "body", o.Project); err != nil {
@@ -124,8 +149,37 @@ func (o *PostBody) validateProject(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this post body based on context it is used
+// ContextValidate validate this post body based on the context it is used
 func (o *PostBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.contextValidateCommands(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *PostBody) contextValidateCommands(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(o.Commands); i++ {
+
+		if o.Commands[i] != nil {
+			if err := o.Commands[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("body" + "." + "commands" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("body" + "." + "commands" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -314,6 +368,53 @@ func (o *PostOKBodyGcloudItems0) MarshalBinary() ([]byte, error) {
 // UnmarshalBinary interface implementation
 func (o *PostOKBodyGcloudItems0) UnmarshalBinary(b []byte) error {
 	var res PostOKBodyGcloudItems0
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
+}
+
+// PostParamsBodyCommandsItems0 post params body commands items0
+//
+// swagger:model PostParamsBodyCommandsItems0
+type PostParamsBodyCommandsItems0 struct {
+
+	// Command to run
+	// Example: kubectl version --client=true -o json
+	Command string `json:"command,omitempty"`
+
+	// Stops excecution if command fails, otherwise proceeds with next command
+	Continue bool `json:"continue,omitempty"`
+
+	// If set to false the command will not print the full command with arguments to logs.
+	Print *bool `json:"print,omitempty"`
+
+	// If set to false the command will not print output to logs.
+	Silent *bool `json:"silent,omitempty"`
+}
+
+// Validate validates this post params body commands items0
+func (o *PostParamsBodyCommandsItems0) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this post params body commands items0 based on context it is used
+func (o *PostParamsBodyCommandsItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *PostParamsBodyCommandsItems0) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *PostParamsBodyCommandsItems0) UnmarshalBinary(b []byte) error {
+	var res PostParamsBodyCommandsItems0
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

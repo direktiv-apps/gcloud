@@ -158,7 +158,7 @@ echo "using existing key.json file"
 	cmd = strings.Replace(cmd, "\n", "", -1)
 
 	silent := convertTemplateToBool("true", at, false)
-	print := convertTemplateToBool("true", at, true)
+	print := convertTemplateToBool("false", at, true)
 	output := ""
 
 	envs := []string{}
@@ -227,7 +227,7 @@ func runCommand2(ctx context.Context,
 			params.DirektivDir,
 		}
 
-		cmd, err := templateString(`{{ .Item }}`, ls)
+		cmd, err := templateString(`{{ .Item.Command }}`, ls)
 		if err != nil {
 			ir := make(map[string]interface{})
 			ir[successKey] = false
@@ -236,9 +236,9 @@ func runCommand2(ctx context.Context,
 			continue
 		}
 
-		silent := convertTemplateToBool("<no value>", ls, false)
-		print := convertTemplateToBool("<no value>", ls, true)
-		cont := convertTemplateToBool("{{ .Body.Continue }}", ls, false)
+		silent := convertTemplateToBool("{{ .Item.Silent }}", ls, false)
+		print := convertTemplateToBool("{{ .Item.Print }}", ls, true)
+		cont := convertTemplateToBool("{{ .Item.Continue }}", ls, false)
 		output := ""
 
 		envs := []string{}

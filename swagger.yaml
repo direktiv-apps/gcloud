@@ -11,7 +11,7 @@ info:
     url: https://github.com/direktiv-apps/gcloud 
     categories: 
     - cloud
-    - aws
+    - gcp
     license: |-
       [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)
     long-description: |
@@ -71,15 +71,36 @@ paths:
                 example: my-project-234
               commands:
                 type: array
-                description: List of commands to run. Use `--format=json` to get JSON results.
-                example: gcloud compute instances list --format=json
+                description: Array of commands.
                 items:
-                  type: string
-              continue:
-                type: boolean
-                description: If set to true all commands are getting executed and errors ignored.
-                default: false
-                example: true
+                  type: object
+                  properties:
+                    command:
+                      type: string
+                      description: Command to run
+                      example:  gcloud compute instances list --format=json
+                    silent: 
+                      type: boolean
+                      description: If set to false the command will not print output to logs.
+                      default: false
+                    print: 
+                      type: boolean
+                      description: If set to false the command will not print the full command with arguments to logs.
+                      default: true
+                    continue: 
+                      type: boolean
+                      description: Stops excecution if command fails, otherwise proceeds with next command 
+              # commands:
+              #   type: array
+              #   description: List of commands to run. Use `--format=json` to get JSON results.
+              #   example: gcloud compute instances list --format=json
+              #   items:
+              #     type: string
+              # continue:
+              #   type: boolean
+              #   description: If set to true all commands are getting executed and errors ignored.
+              #   default: false
+              #   example: true
       # direktiv code generation is configured here
       x-direktiv-function: |-
         functions:
@@ -110,17 +131,15 @@ paths:
                  action:
                   function: gcloud
                   secrets: ["gcloud"]
-                  files:
-                  - key: test.sh
-                    scope: inline
-                    mode: "0755"
-                    value: |-
-                      #!/bin/bash
-                      gcloud builds list --format=json
                   input:
                     account: serviceaccount@project.iam.gserviceaccount.com
                     project: project
                     key: jq(.secrets.gcloud | @base64 )
+                    - name: test.sh
+                      mode: "0755"
+                      data: |-
+                        #!/bin/bash
+                        gcloud builds list --format=json
                     commands:
                     - ./test.sh
       x-direktiv:  
@@ -133,7 +152,7 @@ paths:
             echo "using existing key.json file"
             {{- end }}
           silent: true
-          print: true
+          print: false
           continue: false
         - action: exec
           exec: gcloud auth activate-service-account {{ .Account }} --key-file=key.json
@@ -141,10 +160,17 @@ paths:
           continue: false
           print: false
         - action: foreach
-          loop: .Commands
-          exec: '{{ .Item }}'
+          loop: .Commands 
+          exec: '{{ .Item.Command }}'
+          silent: '{{ .Item.Silent }}'
+          print: '{{ .Item.Print }}'
+          continue: '{{ .Item.Continue }}'  
           env: ["HOME={{ .DirektivDir }}", "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"]
-          continue: '{{ .Body.Continue }}'
+        # - action: foreach
+        #   loop: .Commands
+        #   exec: '{{ .Item }}'
+        #   env: ["HOME={{ .DirektivDir }}", "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"]
+        #   continue: '{{ .Body.Continue }}'
         output: |
           {
             "gcloud": {{ index . 2 | toJson }}
