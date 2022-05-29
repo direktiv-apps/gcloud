@@ -37,7 +37,7 @@ func init() {
         "cloud",
         "gcp"
       ],
-      "container": "direktiv/gcloud",
+      "container": "gcr.io/direktiv/apps/gcloud",
       "issues": "https://github.com/direktiv-apps/gcloud/issues",
       "license": "[Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)",
       "long-description": "This function executes alist of commans. It can run gcloud commands but has basic build tools installed as well, e.g. git.\n",
@@ -85,7 +85,7 @@ func init() {
                       "command": {
                         "description": "Command to run",
                         "type": "string",
-                        "example": "kubectl version --client=true -o json"
+                        "example": "gcloud compute instances list --format=json"
                       },
                       "continue": {
                         "description": "Stops excecution if command fails, otherwise proceeds with next command",
@@ -240,11 +240,11 @@ func init() {
             "title": "Basic"
           },
           {
-            "content": "- id: req\n     type: action\n     action:\n      function: gcloud\n      secrets: [\"gcloud\"]\n      files:\n      - key: test.sh\n        scope: inline\n        mode: \"0755\"\n        value: |-\n          #!/bin/bash\n          gcloud builds list --format=json\n      input:\n        account: serviceaccount@project.iam.gserviceaccount.com\n        project: project\n        key: jq(.secrets.gcloud | @base64 )\n        commands:\n        - ./test.sh",
+            "content": "- id: req\n     type: action\n     action:\n      function: gcloud\n      secrets: [\"gcloud\"]\n      input:\n        account: serviceaccount@project.iam.gserviceaccount.com\n        project: project\n        key: jq(.secrets.gcloud | @base64 )\n        files:\n        - name: test.sh\n          mode: \"0755\"\n          data: |-\n            #!/bin/bash\n            gcloud builds list --format=json\n        commands:\n        - ./test.sh",
             "title": "Running Scripts"
           }
         ],
-        "x-direktiv-function": "functions:\n  - id: gcloud\n    image: direktiv/gcloud:1.0\n    type: knative-workflow"
+        "x-direktiv-function": "functions:\n  - id: gcloud\n    image: gcr.io/direktiv/apps/gcloud:1.0\n    type: knative-workflow"
       },
       "delete": {
         "parameters": [
@@ -313,7 +313,7 @@ func init() {
         "cloud",
         "gcp"
       ],
-      "container": "direktiv/gcloud",
+      "container": "gcr.io/direktiv/apps/gcloud",
       "issues": "https://github.com/direktiv-apps/gcloud/issues",
       "license": "[Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)",
       "long-description": "This function executes alist of commans. It can run gcloud commands but has basic build tools installed as well, e.g. git.\n",
@@ -483,11 +483,11 @@ func init() {
             "title": "Basic"
           },
           {
-            "content": "- id: req\n     type: action\n     action:\n      function: gcloud\n      secrets: [\"gcloud\"]\n      files:\n      - key: test.sh\n        scope: inline\n        mode: \"0755\"\n        value: |-\n          #!/bin/bash\n          gcloud builds list --format=json\n      input:\n        account: serviceaccount@project.iam.gserviceaccount.com\n        project: project\n        key: jq(.secrets.gcloud | @base64 )\n        commands:\n        - ./test.sh",
+            "content": "- id: req\n     type: action\n     action:\n      function: gcloud\n      secrets: [\"gcloud\"]\n      input:\n        account: serviceaccount@project.iam.gserviceaccount.com\n        project: project\n        key: jq(.secrets.gcloud | @base64 )\n        files:\n        - name: test.sh\n          mode: \"0755\"\n          data: |-\n            #!/bin/bash\n            gcloud builds list --format=json\n        commands:\n        - ./test.sh",
             "title": "Running Scripts"
           }
         ],
-        "x-direktiv-function": "functions:\n  - id: gcloud\n    image: direktiv/gcloud:1.0\n    type: knative-workflow"
+        "x-direktiv-function": "functions:\n  - id: gcloud\n    image: gcr.io/direktiv/apps/gcloud:1.0\n    type: knative-workflow"
       },
       "delete": {
         "parameters": [
@@ -516,7 +516,7 @@ func init() {
         "command": {
           "description": "Command to run",
           "type": "string",
-          "example": "kubectl version --client=true -o json"
+          "example": "gcloud compute instances list --format=json"
         },
         "continue": {
           "description": "Stops excecution if command fails, otherwise proceeds with next command",

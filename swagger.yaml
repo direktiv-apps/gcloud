@@ -4,7 +4,7 @@ info:
   title: gcloud
   version: "1.0"
   x-direktiv-meta:
-    container: direktiv/gcloud
+    container: gcr.io/direktiv/apps/gcloud
     maintainer: |-
       [direktiv.io](https://www.direktiv.io)
     issues: https://github.com/direktiv-apps/gcloud/issues
@@ -90,22 +90,11 @@ paths:
                     continue: 
                       type: boolean
                       description: Stops excecution if command fails, otherwise proceeds with next command 
-              # commands:
-              #   type: array
-              #   description: List of commands to run. Use `--format=json` to get JSON results.
-              #   example: gcloud compute instances list --format=json
-              #   items:
-              #     type: string
-              # continue:
-              #   type: boolean
-              #   description: If set to true all commands are getting executed and errors ignored.
-              #   default: false
-              #   example: true
       # direktiv code generation is configured here
       x-direktiv-function: |-
         functions:
           - id: gcloud
-            image: direktiv/gcloud:1.0
+            image: gcr.io/direktiv/apps/gcloud:1.0
             type: knative-workflow
       x-direktiv-examples:
         - title: Basic
@@ -135,6 +124,7 @@ paths:
                     account: serviceaccount@project.iam.gserviceaccount.com
                     project: project
                     key: jq(.secrets.gcloud | @base64 )
+                    files:
                     - name: test.sh
                       mode: "0755"
                       data: |-
@@ -166,11 +156,6 @@ paths:
           print: '{{ .Item.Print }}'
           continue: '{{ .Item.Continue }}'  
           env: ["HOME={{ .DirektivDir }}", "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"]
-        # - action: foreach
-        #   loop: .Commands
-        #   exec: '{{ .Item }}'
-        #   env: ["HOME={{ .DirektivDir }}", "CLOUDSDK_CORE_PROJECT={{ .Body.Project }}"]
-        #   continue: '{{ .Body.Continue }}'
         output: |
           {
             "gcloud": {{ index . 2 | toJson }}

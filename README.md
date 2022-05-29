@@ -5,7 +5,7 @@ Run Google gcloud commands in Direktiv
 
 ---
 - #### Categories: cloud, gcp
-- #### Image: direktiv/gcloud 
+- #### Image: gcr.io/direktiv/apps/gcloud 
 - #### License: [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 - #### Issue Tracking: https://github.com/direktiv-apps/gcloud/issues
 - #### URL: https://github.com/direktiv-apps/gcloud
@@ -22,7 +22,7 @@ This function executes alist of commans. It can run gcloud commands but has basi
   ```yaml
   functions:
   - id: gcloud
-    image: direktiv/gcloud:1.0
+    image: gcr.io/direktiv/apps/gcloud:1.0
     type: knative-workflow
   ```
    #### Basic
@@ -53,6 +53,7 @@ This function executes alist of commans. It can run gcloud commands but has basi
         account: serviceaccount@project.iam.gserviceaccount.com
         project: project
         key: jq(.secrets.gcloud | @base64 )
+        files:
         - name: test.sh
           mode: "0755"
           data: |-

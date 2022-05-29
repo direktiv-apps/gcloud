@@ -381,7 +381,7 @@ func (o *PostOKBodyGcloudItems0) UnmarshalBinary(b []byte) error {
 type PostParamsBodyCommandsItems0 struct {
 
 	// Command to run
-	// Example: kubectl version --client=true -o json
+	// Example: gcloud compute instances list --format=json
 	Command string `json:"command,omitempty"`
 
 	// Stops excecution if command fails, otherwise proceeds with next command
