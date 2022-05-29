@@ -69,6 +69,11 @@ paths:
                 type: string
                 description: Specifies the project name.
                 example: my-project-234
+              files:
+                type: array
+                items:
+                  $ref: '#/definitions/direktivFile'
+                description: File to create before running commands.
               commands:
                 type: array
                 description: Array of commands.

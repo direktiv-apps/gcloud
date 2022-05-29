@@ -165,6 +165,7 @@ This function executes alist of commans. It can run gcloud commands but has basi
 |------|------|---------|:--------:| ------- |-------------|---------|
 | account | string| `string` | ✓ | | Service account name | `sa@myproject.iam.gserviceaccount.com` |
 | commands | [][PostParamsBodyCommandsItems](#post-params-body-commands-items)| `[]*PostParamsBodyCommandsItems` |  | | Array of commands. |  |
+| files | [][DirektivFile](#direktiv-file)| `[]apps.DirektivFile` |  | | File to create before running commands. |  |
 | key | string| `string` |  | | Base64 encoded JSON access file (IAM). If not provided the function uses `key.json`. |  |
 | project | string| `string` | ✓ | | Specifies the project name. | `my-project-234` |
 

@@ -104,6 +104,13 @@ func init() {
                     }
                   }
                 },
+                "files": {
+                  "description": "File to create before running commands.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/direktivFile"
+                  }
+                },
                 "key": {
                   "description": "Base64 encoded JSON access file (IAM). If not provided the function uses ` + "`" + `key.json` + "`" + `.",
                   "type": "string"
@@ -357,6 +364,13 @@ func init() {
                   "type": "array",
                   "items": {
                     "$ref": "#/definitions/CommandsItems0"
+                  }
+                },
+                "files": {
+                  "description": "File to create before running commands.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/direktivFile"
                   }
                 },
                 "key": {
